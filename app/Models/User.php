@@ -50,4 +50,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(ServiceRecord::class, 'mechanic_id');
     }
+
+    // A mechanic has many reviews
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'mechanic_id');
+    }
+
+// Get mechanic's average rating
+    public function getAverageRatingAttribute()
+    {
+        return round($this->reviews()->avg('rating'), 1);
+    }
 }

@@ -64,4 +64,10 @@ class ServiceRecord extends Model
 
         return $this->cost + $partsCost;
     }
+
+    // A service record has one review
+    public function review()
+    {
+        return $this->hasOne(Review::class);
+    }
 }

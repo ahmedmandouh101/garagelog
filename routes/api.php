@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\GarageController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceRecordController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,10 +25,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/garages/{garage}', [GarageController::class, 'update']);
     Route::delete('/garages/{garage}', [GarageController::class, 'destroy']);
 
-    // Cars — owner only (handled inside FormRequest)
+    // Cars — owner only
     Route::apiResource('cars', CarController::class);
 
     // Service Records — nested under cars
     Route::apiResource('cars.service-records', ServiceRecordController::class)
         ->except(['create', 'edit']);
+
+    // Reviews — nested under cars and service records
+    Route::post('cars/{car}/service-records/{serviceRecord}/reviews', [ReviewController::class, 'store']);
+    Route::get('cars/{car}/service-records/{serviceRecord}/reviews', [ReviewController::class, 'index']);
+
+    // Mechanic reviews
+    Route::get('/mechanic/reviews', [ReviewController::class, 'mechanicReviews']);
 });
