@@ -8,16 +8,18 @@ use App\Http\Requests\UpdateServiceRecordRequest;
 use App\Notifications\ServiceRecordCreated;
 use App\Models\Car;
 use App\Models\ServiceRecord;
+use Illuminate\Http\Request;
 
 class ServiceRecordController extends Controller
 {
-    public function index(Car $car)
+    public function index(Request $request,Car $car)
     {
         if ($car->user_id !== auth()->id()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
         $records = $car->serviceRecords()
+            ->filter($request->only(['service_type', 'date_from', 'date_to', 'cost_min', 'cost_max']))
             ->with('parts', 'mechanic', 'garage')
             ->latest()
             ->paginate(10);

@@ -27,4 +27,23 @@ class Garage extends Model
     {
         return $this->hasMany(ServiceRecord::class);
     }
+
+
+    public function scopeFilter($query, array $filters)
+{
+    if (!empty($filters['search'])) {
+        $search = $filters['search'];
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('city', 'like', "%{$search}%")
+              ->orWhere('address', 'like', "%{$search}%");
+        });
+    }
+
+    if (!empty($filters['city'])) {
+        $query->where('city', $filters['city']);
+    }
+
+    return $query;
+}
 }

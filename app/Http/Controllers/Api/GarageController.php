@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGarageRequest;
 use App\Http\Requests\UpdateGarageRequest;
 use App\Models\Garage;
+use Illuminate\Http\Request;
 
 class GarageController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $garages = Garage::withCount('mechanics')
+        $garages = Garage::filter($request->only(['search', 'city']))
+            ->withCount('mechanics')
             ->paginate(10);
 
         return response()->json($garages);

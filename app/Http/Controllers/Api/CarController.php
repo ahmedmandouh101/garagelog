@@ -6,12 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCarRequest;
 use App\Http\Requests\UpdateCarRequest;
 use App\Models\Car;
+use Illuminate\Http\Request;
 
 class CarController extends Controller
 {
-    public function index()
+    // public function index()
+    // {
+    //     $cars = Car::where('user_id', auth()->id())
+    //         ->with('latestService')
+    //         ->paginate(10);
+
+    //     return response()->json($cars);
+    // }
+
+    public function index(Request $request)
     {
         $cars = Car::where('user_id', auth()->id())
+            ->filter($request->only(['search', 'make', 'year']))
             ->with('latestService')
             ->paginate(10);
 

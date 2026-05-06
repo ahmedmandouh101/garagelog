@@ -70,4 +70,32 @@ class ServiceRecord extends Model
     {
         return $this->hasOne(Review::class);
     }
+
+
+
+
+    public function scopeFilter($query, array $filters)
+{
+    if (!empty($filters['service_type'])) {
+        $query->where('service_type', 'like', "%{$filters['service_type']}%");
+    }
+
+    if (!empty($filters['date_from'])) {
+        $query->whereDate('service_date', '>=', $filters['date_from']);
+    }
+
+    if (!empty($filters['date_to'])) {
+        $query->whereDate('service_date', '<=', $filters['date_to']);
+    }
+
+    if (!empty($filters['cost_min'])) {
+        $query->where('cost', '>=', $filters['cost_min']);
+    }
+
+    if (!empty($filters['cost_max'])) {
+        $query->where('cost', '<=', $filters['cost_max']);
+    }
+
+    return $query;
+}
 }

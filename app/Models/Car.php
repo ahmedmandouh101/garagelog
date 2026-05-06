@@ -36,4 +36,27 @@ class Car extends Model
     {
         return $this->hasOne(ServiceRecord::class)->latestOfMany();
     }
+
+    // Filter scope
+    public function scopeFilter($query, array $filters){
+    if (!empty($filters['search'])) {
+        $search = $filters['search'];
+        $query->where(function ($q) use ($search) {
+            $q->where('make', 'like', "%{$search}%")
+              ->orWhere('model', 'like', "%{$search}%")
+              ->orWhere('plate_number', 'like', "%{$search}%");
+        });
+    }
+
+    if (!empty($filters['make'])) {
+        $query->where('make', $filters['make']);
+    }
+
+    if (!empty($filters['year'])) {
+        $query->where('year', $filters['year']);
+    }
+
+    return $query;
+    }
+
 }
