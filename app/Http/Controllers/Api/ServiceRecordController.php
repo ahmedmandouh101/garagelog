@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreServiceRecordRequest;
 use App\Http\Requests\UpdateServiceRecordRequest;
+use App\Notifications\ServiceRecordCreated;
 use App\Models\Car;
 use App\Models\ServiceRecord;
 
@@ -46,6 +47,9 @@ class ServiceRecordController extends Controller
         }
 
         $record->load('parts', 'mechanic', 'garage');
+
+        // Notify the car owner
+        $car->owner->notify(new ServiceRecordCreated($record));
 
         return response()->json([
             'message' => 'Service record created successfully',

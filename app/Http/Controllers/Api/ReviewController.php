@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReviewRequest;
+use App\Notifications\NewReviewReceived;
 use App\Models\Car;
 use App\Models\ServiceRecord;
 use App\Models\Review;
@@ -28,6 +29,9 @@ class ReviewController extends Controller
         ]);
 
         $review->load('mechanic', 'owner');
+
+        // Notify the mechanic
+        $review->mechanic->notify(new NewReviewReceived($review));
 
         return response()->json([
             'message' => 'Review submitted successfully',

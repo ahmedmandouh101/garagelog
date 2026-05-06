@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\GarageController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\ServiceRecordController;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Garages — admin only (handled inside FormRequest)
+    // Garages — admin only
     Route::post('/garages', [GarageController::class, 'store']);
     Route::put('/garages/{garage}', [GarageController::class, 'update']);
     Route::delete('/garages/{garage}', [GarageController::class, 'destroy']);
@@ -38,4 +39,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Mechanic reviews
     Route::get('/mechanic/reviews', [ReviewController::class, 'mechanicReviews']);
+
+    // Notifications
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread', [NotificationController::class, 'unread']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+    });
 });
