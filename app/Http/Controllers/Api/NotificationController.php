@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 
 class NotificationController extends Controller
 {
-    // Get all notifications
     public function index()
     {
         $notifications = auth()->user()
@@ -16,7 +15,6 @@ class NotificationController extends Controller
         return response()->json($notifications);
     }
 
-    // Get unread notifications only
     public function unread()
     {
         $notifications = auth()->user()
@@ -29,7 +27,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    // Mark a notification as read
     public function markAsRead(string $id)
     {
         $notification = auth()->user()
@@ -43,7 +40,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    // Mark all notifications as read
     public function markAllAsRead()
     {
         auth()->user()->unreadNotifications->markAsRead();

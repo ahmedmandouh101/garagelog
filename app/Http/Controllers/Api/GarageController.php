@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreGarageRequest;
 use App\Http\Requests\UpdateGarageRequest;
+use App\Http\Resources\GarageResource;
 use App\Models\Garage;
 use Illuminate\Http\Request;
 
@@ -16,7 +17,7 @@ class GarageController extends Controller
             ->withCount('mechanics')
             ->paginate(10);
 
-        return response()->json($garages);
+        return GarageResource::collection($garages);
     }
 
     public function store(StoreGarageRequest $request)
@@ -25,7 +26,7 @@ class GarageController extends Controller
 
         return response()->json([
             'message' => 'Garage created successfully',
-            'garage'  => $garage,
+            'garage'  => new GarageResource($garage),
         ], 201);
     }
 
@@ -33,7 +34,7 @@ class GarageController extends Controller
     {
         $garage->load('mechanics', 'serviceRecords');
 
-        return response()->json($garage);
+        return new GarageResource($garage);
     }
 
     public function update(UpdateGarageRequest $request, Garage $garage)
@@ -42,7 +43,7 @@ class GarageController extends Controller
 
         return response()->json([
             'message' => 'Garage updated successfully',
-            'garage'  => $garage,
+            'garage'  => new GarageResource($garage),
         ]);
     }
 
