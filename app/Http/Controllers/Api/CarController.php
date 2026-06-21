@@ -5,20 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCarRequest;
 use App\Http\Requests\UpdateCarRequest;
+use App\Http\Resources\CarResource;
 use App\Models\Car;
 use Illuminate\Http\Request;
 
 class CarController extends Controller
 {
-    // public function index()
-    // {
-    //     $cars = Car::where('user_id', auth()->id())
-    //         ->with('latestService')
-    //         ->paginate(10);
-
-    //     return response()->json($cars);
-    // }
-
     public function index(Request $request)
     {
         $cars = Car::where('user_id', auth()->id())
@@ -26,7 +18,7 @@ class CarController extends Controller
             ->with('latestService')
             ->paginate(10);
 
-        return response()->json($cars);
+        return CarResource::collection($cars);
     }
 
     public function store(StoreCarRequest $request)
@@ -38,7 +30,7 @@ class CarController extends Controller
 
         return response()->json([
             'message' => 'Car registered successfully',
-            'car'     => $car,
+            'car'     => new CarResource($car),
         ], 201);
     }
 
@@ -48,9 +40,9 @@ class CarController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $car->load('serviceRecords.parts', 'serviceRecords.garage', 'serviceRecords.mechanic');
+        $car->load('serviceRecords.parts', 'serviceRecords.garage', 'serviceRecords.mechanic', 'owner');
 
-        return response()->json($car);
+        return new CarResource($car);
     }
 
     public function update(UpdateCarRequest $request, Car $car)
@@ -59,7 +51,7 @@ class CarController extends Controller
 
         return response()->json([
             'message' => 'Car updated successfully',
-            'car'     => $car,
+            'car'     => new CarResource($car),
         ]);
     }
 

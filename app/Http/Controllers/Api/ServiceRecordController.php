@@ -5,14 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreServiceRecordRequest;
 use App\Http\Requests\UpdateServiceRecordRequest;
-use App\Notifications\ServiceRecordCreated;
+use App\Http\Resources\ServiceRecordResource;
 use App\Models\Car;
 use App\Models\ServiceRecord;
+use App\Notifications\ServiceRecordCreated;
 use Illuminate\Http\Request;
 
 class ServiceRecordController extends Controller
 {
-    public function index(Request $request,Car $car)
+    public function index(Request $request, Car $car)
     {
         if ($car->user_id !== auth()->id()) {
             return response()->json(['message' => 'Forbidden'], 403);
@@ -24,7 +25,7 @@ class ServiceRecordController extends Controller
             ->latest()
             ->paginate(10);
 
-        return response()->json($records);
+        return ServiceRecordResource::collection($records);
     }
 
     public function store(StoreServiceRecordRequest $request, Car $car)
@@ -41,7 +42,6 @@ class ServiceRecordController extends Controller
             'next_service_mileage' => $request->next_service_mileage,
         ]);
 
-        // Create parts if provided
         if ($request->has('parts')) {
             foreach ($request->parts as $part) {
                 $record->parts()->create($part);
@@ -50,12 +50,11 @@ class ServiceRecordController extends Controller
 
         $record->load('parts', 'mechanic', 'garage');
 
-        // Notify the car owner
         $car->owner->notify(new ServiceRecordCreated($record));
 
         return response()->json([
             'message' => 'Service record created successfully',
-            'record'  => $record,
+            'record'  => new ServiceRecordResource($record),
         ], 201);
     }
 
@@ -65,16 +64,15 @@ class ServiceRecordController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $serviceRecord->load('parts', 'mechanic', 'garage');
+        $serviceRecord->load('parts', 'mechanic', 'garage', 'review');
 
-        return response()->json($serviceRecord);
+        return new ServiceRecordResource($serviceRecord);
     }
 
     public function update(UpdateServiceRecordRequest $request, Car $car, ServiceRecord $serviceRecord)
     {
         $serviceRecord->update($request->validated());
 
-        // If parts are provided, delete old ones and create new ones
         if ($request->has('parts')) {
             $serviceRecord->parts()->delete();
             foreach ($request->parts as $part) {
@@ -86,7 +84,7 @@ class ServiceRecordController extends Controller
 
         return response()->json([
             'message' => 'Service record updated successfully',
-            'record'  => $serviceRecord,
+            'record'  => new ServiceRecordResource($serviceRecord),
         ]);
     }
 
