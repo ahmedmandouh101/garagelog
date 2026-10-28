@@ -55,6 +55,10 @@ Open `http://127.0.0.1:8010`. Demo credentials, restricted to local/testing envi
 - Owner: `owner@garagelog.example.test`
 - Password for both: `GarageLogDemo2026!`
 
+After running the latest demo seeder, those two fictional accounts are marked
+email-verified for local demos. `unverified@garagelog.example.test`, with the same
+demo password, demonstrates the verification gate without sending real email.
+
 The demo seeder adds clearly labeled fictional data. It does not reset the database,
 change existing account passwords, or send emails. Never run a publicly reachable
 instance with these demo accounts. Authentication tokens are held in page memory;
@@ -111,3 +115,50 @@ remain private workshop records and are not copied into the owner's profile.
 
 No public share link is issued for customer history or receipts. See ROADMAP.md
 for remaining workflow gaps and production requirements.
+
+## Account recovery and email confirmation
+
+- `POST /api/forgot-password` with `email`: always returns the same generic response
+  for known/unknown accounts. Mail transport errors are logged and do not expose
+  account existence in the response. A response does not prove email delivery.
+- `POST /api/reset-password` with `email`, `token`, `password`, and
+  `password_confirmation`: tokens expire after 60 minutes and are consumed once.
+  Successful reset deletes all user API tokens and database sessions.
+- Authenticated `POST /api/email/verification-notification`: requests a confirmation
+  message, limited to once per minute per account.
+- Signed `GET /verify-email/{id}/{hash}`: confirms the intended mailbox once the
+  emailed link is opened. Signatures cover the relative path and query and expire
+  after an hour. Links always use the configured APP_URL, not the incoming Host.
+- `GET /api/me` exposes `email_verified` only to the current account. `/me`, logout,
+  login and verification requests work before verification; other authenticated
+  workspace endpoints return 403 until email confirmation is complete.
+
+Registration does not silently mark an email verified or automatically send mail;
+the workspace offers an explicit send button. Existing real accounts must verify
+too; there is no automatic grandfathering. No phone verification is implemented.
+
+Set APP_URL to the exact browser origin, including scheme, port and any subdirectory.
+For example, serving on `127.0.0.1:8010` requires `APP_URL=http://127.0.0.1:8010`.
+After environment changes, run `php artisan config:clear`. Configure a working mail
+transport and sender before external use; delivery to an actual inbox was not tested
+in this update. The log driver writes message links to local logs and does not deliver.
+Treat mail logs as sensitive and do not expose them publicly.
+
+Reset links carry the token in the URL fragment, which the app removes on load;
+the form submits it directly to the API. Neither reset nor confirmation automatically
+signs a user in. Newly issued API tokens last 24 hours. Previously issued tokens
+retain their original expiry until logout/reset; this update does not bulk-revoke them.
+
+## Service data rules
+
+New/edited service dates use `YYYY-MM-DD` and cannot exceed today's Cairo date.
+Next service dates and odometer thresholds must exceed that service's values,
+including when only one field is edited. Readings must fit between earlier and
+later services; equal dates are ordered by record ID. Historical entries below the
+vehicle's current odometer are allowed, but they never reduce its current reading.
+Owners cannot decrease the current odometer. Genuine corrections/odometer
+replacement require a future audited correction workflow; no bypass was added.
+
+Monetary inputs allow at most two decimal places and values fitting existing decimal
+columns. Null labor costs and out-of-range integer readings are rejected. Existing
+history is not rewritten or normalized automatically.

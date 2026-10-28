@@ -9,18 +9,19 @@ class UpdateCarRequest extends FormRequest
     public function authorize(): bool
     {
         $car = $this->route('car');
+
         return $this->user()->role === 'owner' && $car->user_id === $this->user()->id;
     }
 
     public function rules(): array
     {
         return [
-            'make'         => 'sometimes|string|max:255',
-            'model'        => 'sometimes|string|max:255',
-            'year'         => 'sometimes|integer|min:1900|max:' . date('Y'),
-            'plate_number' => 'sometimes|string|unique:cars,plate_number,' . $this->route('car')->id,
-            'color'        => 'nullable|string|max:100',
-            'mileage'      => 'nullable|integer|min:0',
+            'make' => 'sometimes|string|max:255',
+            'model' => 'sometimes|string|max:255',
+            'year' => 'sometimes|integer|min:1900|max:'.date('Y'),
+            'plate_number' => 'sometimes|string|unique:cars,plate_number,'.$this->route('car')->id,
+            'color' => 'nullable|string|max:100',
+            'mileage' => 'sometimes|integer|max:4294967295|min:'.max($this->route('car')->mileage, $this->route('car')->serviceRecords()->max('mileage_at_service') ?? 0),
         ];
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Resources\ServiceRecordResource;
 use App\Models\Car;
 use App\Models\ServiceRecord;
 use App\Notifications\ServiceRecordCreated;
+use App\Services\ServiceRecordIntegrity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,7 @@ class ServiceRecordController extends Controller
         $records = $car->serviceRecords()
             ->filter($request->only(['service_type', 'date_from', 'date_to', 'cost_min', 'cost_max']))
             ->with('parts', 'mechanic', 'garage')
-            ->latest()
+            ->orderByDesc('service_date')->orderByDesc('id')
             ->paginate(10);
 
         return ServiceRecordResource::collection($records);
@@ -32,6 +33,8 @@ class ServiceRecordController extends Controller
     public function store(StoreServiceRecordRequest $request, Car $car)
     {
         $record = DB::transaction(function () use ($request, $car) {
+            $car = Car::whereKey($car->id)->lockForUpdate()->firstOrFail();
+            app(ServiceRecordIntegrity::class)->validate($car, $request->validated());
             $record = $car->serviceRecords()->create([
                 'garage_id' => $request->garage_id,
                 'mechanic_id' => auth()->id(),
@@ -49,6 +52,8 @@ class ServiceRecordController extends Controller
                     $record->parts()->create($part);
                 }
             }
+
+            $car->update(['mileage' => max($car->mileage, $record->mileage_at_service)]);
 
             return $record;
         });
@@ -77,7 +82,10 @@ class ServiceRecordController extends Controller
 
     public function update(UpdateServiceRecordRequest $request, Car $car, ServiceRecord $serviceRecord)
     {
-        DB::transaction(function () use ($request, $serviceRecord) {
+        DB::transaction(function () use ($request, $serviceRecord, $car) {
+            $car = Car::whereKey($car->id)->lockForUpdate()->firstOrFail();
+            $serviceRecord->refresh();
+            app(ServiceRecordIntegrity::class)->validate($car, $request->validated(), $serviceRecord);
             $serviceRecord->update($request->safe()->except('parts'));
 
             if ($request->has('parts')) {
@@ -87,6 +95,7 @@ class ServiceRecordController extends Controller
                 }
             }
 
+            $car->update(['mileage' => max($car->mileage, $serviceRecord->mileage_at_service)]);
         });
 
         $serviceRecord->load('parts', 'mechanic', 'garage');

@@ -4,6 +4,7 @@
     const state = {token: null, user: null, mode: 'login', page: 1, lastPage: 1, search: '', cars: [], customerPage: 1, customerLastPage: 1, customerSearch: '', servicePage: 1, serviceLastPage: 1, pendingClaim: null};
     const roles = {owner: 'حساب صاحب عربية', mechanic: 'مساحة الورشة', admin: 'إدارة النظام'};
     const number = value => new Intl.NumberFormat('ar-EG').format(Number(value));
+    let recoveryToken = null;
     function notice(message, error = false) {
         $('notice').textContent = message;
         $('notice').classList.toggle('error', error);
@@ -18,6 +19,7 @@
         if (!response.ok) {
             if (response.status === 401 && state.token) reset();
             const translations = {'Invalid or expired linking code': 'رمز الربط غير صحيح، اتستخدم قبل كده، أو انتهت صلاحيته.', 'Vehicle plate must match the workshop intake': 'لوحة العربية في حسابك لازم تطابق اللوحة اللي سجلتها الورشة.', 'Customer has already linked their vehicle': 'العميل ربط عربيته بالفعل. مش محتاج رمز جديد.'};
+            if (body.message === 'Your email address is not verified.') throw new Error('أكد بريدك الإلكتروني الأول، وبعدها حدّث بيانات الحساب.');
             const message = body.errors ? Object.values(body.errors).flat().join('\n') : ({403: 'حسابك لا يملك صلاحية العملية دي. راجع عضوية الورشة وموافقة صاحب العربية.', 404: 'البيانات المطلوبة غير موجودة أو غير متاحة لحسابك.', 429: 'محاولات كتير في وقت قصير. استنى دقيقة وجرب تاني.'}[response.status] || translations[body.message] || body.message || 'تعذر إتمام العملية.');
             throw new Error(message);
         }
@@ -47,15 +49,22 @@
         state.pendingClaim = null;
         $('claim-preview').hidden = true; $('receipt-panel').hidden = true;
         $('receipt-frame').srcdoc = ''; $('customer-code').textContent = ''; $('customer-code').hidden = true;
+        $('verification-panel').hidden = true;
         ['cars-list', 'staff-list', 'history-list', 'customers-list', 'workshop-history-list', 'grants-list'].forEach(id => $(id).replaceChildren());
         document.querySelectorAll('#workspace form').forEach(form => form.reset());
     }
     function mode(value) {
         state.mode = value;
         const register = value === 'register';
+        const recovery = value === 'forgot' || value === 'reset';
+        $('auth-form').hidden = recovery;
+        document.querySelector('.tabs').hidden = recovery;
+        $('forgot-link').hidden = recovery || register;
+        $('recovery-panel').hidden = value !== 'forgot'; $('reset-panel').hidden = value !== 'reset';
+        $('back-to-login').hidden = !recovery;
         $('name-label').hidden = !register; $('role-label').hidden = !register;
         $('auth-form').elements.name.required = register;
-        $('auth-title').textContent = register ? 'ابدأ سجل جديد' : 'أهلًا برجوعك';
+        $('auth-title').textContent = value === 'forgot' ? 'استعادة حسابك' : value === 'reset' ? 'كلمة مرور جديدة' : register ? 'ابدأ سجل جديد' : 'أهلًا برجوعك';
         $('auth-submit').textContent = register ? 'إنشاء حساب' : 'دخول لحسابك ←';
         $('login-tab').classList.toggle('selected', !register); $('register-tab').classList.toggle('selected', register);
         $('auth-form').elements.password.autocomplete = register ? 'new-password' : 'current-password';
@@ -67,7 +76,7 @@
         state.token = result.token; state.page = 1; state.search = '';
         state.customerPage = 1; state.customerSearch = ''; state.servicePage = 1;
         $('auth-form').reset();
-        await refresh(); notice('أهلًا بيك. حسابك جاهز.');
+        await refresh(); notice(state.user.email_verified ? 'أهلًا بيك. حسابك جاهز.' : 'تم الدخول. أكّد بريدك الإلكتروني علشان تكمل.');
     });
     async function refresh() {
         state.user = (await api('/me')).data;
@@ -75,6 +84,10 @@
         $('auth').hidden = true; $('workspace').hidden = false; $('logout').hidden = false;
         $('greeting').textContent = 'أهلًا، ' + user.name;
         $('role-name').textContent = roles[user.role];
+        $('verification-panel').hidden = user.email_verified;
+        $('workspace-content').hidden = !user.email_verified;
+        $('verification-email').textContent = user.email;
+        if (!user.email_verified) return;
         $('workspace-description').textContent = user.role === 'owner' ? 'عربياتك، تاريخ صيانتها، وصلاحيات الورش في مكان واحد.' : 'سجل الخدمة وتابع العربيات المصرّح لورشتك بالشغل عليها.';
         document.querySelectorAll('[data-role]').forEach(element => { element.hidden = element.dataset.role !== user.role; });
         $('manager-panel').hidden = !user.is_garage_manager;
@@ -304,4 +317,32 @@
         finally { $('confirm-claim').disabled = false; }
     };
     $('logout').onclick = async () => { try { await api('/logout', 'POST'); } catch (_) {} reset(); notice('تم تسجيل الخروج.'); };
+    $('forgot-link').onclick = () => mode('forgot');
+    $('back-to-login').onclick = () => { recoveryToken = null; $('reset-form').reset(); mode('login'); };
+    bindForm('forgot-form', async data => {
+        const result = await api('/forgot-password', 'POST', data);
+        notice(result.message);
+    });
+    bindForm('reset-form', async data => {
+        if (!recoveryToken) throw new Error('افتح رابط الاستعادة الموجود في بريدك، أو اطلب رابط جديد.');
+        const result = await api('/reset-password', 'POST', {...data, token: recoveryToken});
+        recoveryToken = null; $('reset-form').reset(); mode('login'); notice(result.message);
+    });
+    $('send-verification').onclick = async () => {
+        $('send-verification').disabled = true;
+        try { const result = await api('/email/verification-notification', 'POST'); notice(result.message); }
+        catch (error) { notice(error.message, true); }
+        finally { $('send-verification').disabled = false; }
+    };
+    $('check-verification').onclick = async () => {
+        try { await refresh(); notice(state.user.email_verified ? 'بريدك اتأكد. تقدر تكمل استخدام حسابك.' : 'البريد لسه مش متأكد. افتح رابط رسالة التأكيد أولًا.'); }
+        catch (error) { notice(error.message, true); }
+    };
+    const fragment = new URLSearchParams(location.hash.slice(1));
+    if (fragment.has('reset_token')) {
+        recoveryToken = fragment.get('reset_token');
+        $('reset-form').elements.email.value = fragment.get('email') || '';
+        window.history.replaceState(null, '', location.pathname + location.search);
+        mode('reset');
+    }
 })();

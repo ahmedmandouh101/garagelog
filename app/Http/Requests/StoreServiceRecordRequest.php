@@ -19,17 +19,17 @@ class StoreServiceRecordRequest extends FormRequest
         return [
             'garage_id' => 'required|exists:garages,id',
             'service_type' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'mileage_at_service' => 'required|integer|min:0',
-            'cost' => 'nullable|numeric|min:0',
-            'service_date' => 'required|date',
-            'next_service_date' => 'nullable|date|after:service_date',
-            'next_service_mileage' => 'nullable|integer|min:0',
+            'description' => 'nullable|string|max:5000',
+            'mileage_at_service' => 'required|integer|min:0|max:4294967295',
+            'cost' => 'sometimes|numeric|decimal:0,2|min:0|max:99999999.99',
+            'service_date' => 'required|date_format:Y-m-d|before_or_equal:'.today('Africa/Cairo')->toDateString(),
+            'next_service_date' => 'nullable|date_format:Y-m-d|after:service_date',
+            'next_service_mileage' => 'nullable|integer|min:0|max:4294967295',
             'parts' => 'sometimes|array',
             'parts.*' => 'array:part_name,quantity,price',
             'parts.*.part_name' => 'required_with:parts|string|max:255',
-            'parts.*.quantity' => 'required_with:parts|integer|min:1',
-            'parts.*.price' => 'required_with:parts|numeric|min:0',
+            'parts.*.quantity' => 'required_with:parts|integer|min:1|max:4294967295',
+            'parts.*.price' => 'required_with:parts|numeric|decimal:0,2|min:0|max:99999999.99',
         ];
     }
 }

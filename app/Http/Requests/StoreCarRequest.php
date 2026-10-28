@@ -14,12 +14,12 @@ class StoreCarRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'make'         => 'required|string|max:255',
-            'model'        => 'required|string|max:255',
-            'year'         => 'required|integer|min:1900|max:' . date('Y'),
+            'make' => 'required|string|max:255',
+            'model' => 'required|string|max:255',
+            'year' => 'required|integer|min:1900|max:'.date('Y'),
             'plate_number' => 'required|string|unique:cars,plate_number',
-            'color'        => 'nullable|string|max:100',
-            'mileage'      => 'nullable|integer|min:0',
+            'color' => 'nullable|string|max:100',
+            'mileage' => 'sometimes|integer|min:0|max:4294967295',
         ];
     }
 }

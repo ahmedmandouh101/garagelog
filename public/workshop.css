@@ -2,3 +2,4 @@
 
 .lower-panel{margin-top:24px}#receipt-frame{width:100%;height:850px;border:1px solid var(--line);margin-top:20px;background:white}.grant-row{padding:12px 0;border-top:1px solid var(--line)}.grant-row button{margin-top:8px}#claim-preview{background:#e5ecdc;padding:16px;border-radius:8px;margin-top:16px}.status-pending{color:#9a6015}.status-linked{color:var(--green)}
 .invitation code{display:block;direction:ltr;user-select:all;padding:12px 0;font-size:13px}.invitation>span,.invitation>button{user-select:none}
+.recovery-link{margin-top:14px;width:100%}.verification-panel{max-width:680px;margin:36px auto;padding:32px;border-top:4px solid var(--green)}.verification-panel p{margin:22px 0;line-height:2}

@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Notifications\ResetAccountPassword;
+use App\Notifications\VerifyAccountEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -31,6 +34,7 @@ class User extends Authenticatable
         return [
             'is_garage_manager' => 'boolean',
             'password' => 'hashed',
+            'email_verified_at' => 'datetime',
         ];
     }
 
@@ -49,6 +53,16 @@ class User extends Authenticatable
     public function managesGarage(): bool
     {
         return $this->role === 'mechanic' && $this->garage_id !== null && $this->is_garage_manager;
+    }
+
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyAccountEmail);
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetAccountPassword($token));
     }
 
     // A mechanic has many service records

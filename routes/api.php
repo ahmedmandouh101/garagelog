@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AccountSecurityController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\GarageController;
@@ -16,12 +17,16 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:authentication');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:authentication');
+Route::post('/forgot-password', [AccountSecurityController::class, 'forgot'])->middleware('throttle:account-recovery');
+Route::post('/reset-password', [AccountSecurityController::class, 'reset'])->middleware('throttle:account-recovery');
+Route::post('/email/verification-notification', [AccountSecurityController::class, 'sendVerification'])
+    ->middleware(['auth:sanctum', 'throttle:verification-email']);
 
 Route::get('/garages', [GarageController::class, 'index']);
 Route::get('/garages/{garage}', [GarageController::class, 'show']);
 
 // Protected routes
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::put('/garages/{garage}/manager', [WorkshopController::class, 'assignManager']);
     Route::get('/workshop/dashboard', [WorkshopController::class, 'dashboard']);
     Route::get('/workshop/staff', [WorkshopController::class, 'staff']);
@@ -41,8 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cars/{car}/garage-access/{garage}', [WorkshopController::class, 'revoke']);
 
     // Auth
-    Route::get('/me', fn (Request $request) => new UserResource($request->user()));
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', fn (Request $request) => new UserResource($request->user()))->withoutMiddleware('verified');
+    Route::post('/logout', [AuthController::class, 'logout'])->withoutMiddleware('verified');
 
     // Garages — admin only
     Route::post('/garages', [GarageController::class, 'store']);

@@ -47,9 +47,24 @@ before investing in native mobile applications or a marketplace.
 - Receipts contain labor, parts, quantities, totals and next service details, with a print/PDF action.
 - Receipts are service summaries, not proof of payment or tax invoices.
 
-## Next delivery: identity, service quality and pilot readiness
+## Account security and service integrity completed — 2026-10-28 (main)
 
-1. Password recovery and verified contact methods; establish vehicle ownership verification policy.
+- Password recovery with expiring, single-use broker tokens and an Arabic reset form.
+- Reset completion revokes all personal access tokens and database sessions.
+- Recovery requests use a generic response for registered/unregistered addresses.
+- Signed email confirmation links expire after one hour; resends are rate limited.
+- Unverified users can sign in, inspect their own account, request verification and log out;
+  protected workshop/vehicle APIs require verified email.
+- New login/registration tokens expire after 24 hours.
+- Service dates cannot be in the future; upcoming date/mileage must follow the service.
+- Chronological odometer validation supports backdated service entries without rolling back current mileage.
+- Service writes and owner odometer updates use vehicle-row locking and transactions.
+- Monetary inputs reject more than two decimal places and out-of-range storage values.
+- Email verification confirms access to the mailbox, not phone identity or legal vehicle ownership.
+
+## Next delivery: contact verification, service types and pilot readiness
+
+1. Phone verification and a policy for vehicle ownership verification.
 2. Customer intake corrections, duplicate handling, consent audit and retention rules.
 3. Normalized service types, mileage validation and mileage reminders.
 4. Consent-based messaging integration and delivery status.
@@ -65,7 +80,7 @@ deliver the receipt and arrange the next service without developer assistance.
 - Establish archive/audit and ownership-transfer policies; admin service deletion remains destructive.
 - Configure real mail delivery, HTTPS, backups, monitoring and scheduler infrastructure.
 - Separate public staff profile fields from private email/phone fields.
-- Implement password recovery, account verification and token/session lifecycle.
+- Configure and test actual email delivery; align APP_URL with the real application origin. Add phone verification and lifecycle controls for legacy tokens.
 - Add mileage reminders and normalize service types before relying on supersession rules.
 - Define billing, tenant limits, support and onboarding after pilot interviews.
 - Replace demo administrator credentials before any public deployment.

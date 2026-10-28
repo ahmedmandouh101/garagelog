@@ -14,6 +14,7 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->when($request->user()?->id === $this->id || $request->user()?->role === 'admin', $this->email),
             'role' => $this->role,
+            'email_verified' => $this->when($request->user()?->id === $this->id, $this->hasVerifiedEmail()),
             'phone' => $this->when($request->user()?->id === $this->id || $request->user()?->role === 'admin', $this->phone),
             'garage_id' => $this->when($request->user()?->id === $this->id, $this->garage_id),
             'is_garage_manager' => $this->when($request->user()?->id === $this->id, $this->is_garage_manager),

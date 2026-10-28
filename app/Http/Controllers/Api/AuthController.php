@@ -30,7 +30,7 @@ class AuthController extends Controller
             'phone' => $validated['phone'] ?? null,
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
 
         $request->setUserResolver(fn () => $user);
 
@@ -55,7 +55,7 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], now()->addDay())->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',

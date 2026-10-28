@@ -30,6 +30,7 @@ In Egypt, when you go to a garage:
 ## Features
 
 - JWT-less token authentication with Sanctum
+- Email confirmation, password recovery, and 24-hour newly issued API tokens
 - Role-based access control (Owner / Mechanic / Admin)
 - Multi-car management per owner
 - Full service history per car

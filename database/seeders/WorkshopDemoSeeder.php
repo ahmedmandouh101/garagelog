@@ -18,6 +18,9 @@ class WorkshopDemoSeeder extends Seeder
             throw new \RuntimeException('Demo data is restricted to local and testing environments.');
         }
         DB::transaction(function () {
+            User::firstOrCreate(['email' => 'unverified@garagelog.example.test'], [
+                'name' => 'حساب تجربة تأكيد البريد', 'password' => Hash::make('GarageLogDemo2026!'), 'role' => 'owner',
+            ]);
             $garage = Garage::firstOrCreate(['name' => 'ورشة GarageLog التجريبية'], [
                 'address' => 'عنوان تجريبي', 'city' => 'القاهرة', 'phone' => null,
             ]);
@@ -31,6 +34,9 @@ class WorkshopDemoSeeder extends Seeder
             if ($manager->wasRecentlyCreated) {
                 $manager->forceFill(['is_garage_manager' => true])->save();
             }
+            // Fictional local demo identities only; real accounts must follow email verification.
+            $owner->forceFill(['email_verified_at' => $owner->email_verified_at ?? now()])->save();
+            $manager->forceFill(['email_verified_at' => $manager->email_verified_at ?? now()])->save();
             $car = Car::firstOrCreate(['plate_number' => 'DEMO-GL-2026'], [
                 'user_id' => $owner->id, 'make' => 'Toyota', 'model' => 'Corolla',
                 'year' => 2020, 'mileage' => 65000, 'color' => 'أبيض',

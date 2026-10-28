@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateCarRequest;
 use App\Http\Resources\CarResource;
 use App\Models\Car;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CarController extends Controller
 {
@@ -47,7 +49,14 @@ class CarController extends Controller
 
     public function update(UpdateCarRequest $request, Car $car)
     {
-        $car->update($request->validated());
+        DB::transaction(function () use ($request, $car) {
+            $car = Car::whereKey($car->id)->lockForUpdate()->firstOrFail();
+            if ($request->has('mileage') && $request->integer('mileage') < max($car->mileage, $car->serviceRecords()->max('mileage_at_service') ?? 0)) {
+                throw ValidationException::withMessages(['mileage' => 'قراءة العداد الجديدة لا يمكن أن تقل عن آخر قراءة محفوظة.']);
+            }
+            $car->update($request->validated());
+        });
+        $car->refresh();
 
         return response()->json([
             'message' => 'Car updated successfully',
