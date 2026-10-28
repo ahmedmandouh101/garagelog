@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReviewRequest;
-use App\Notifications\NewReviewReceived;
+use App\Http\Resources\ReviewResource;
 use App\Models\Car;
-use App\Models\ServiceRecord;
 use App\Models\Review;
+use App\Models\ServiceRecord;
+use App\Notifications\NewReviewReceived;
 
 class ReviewController extends Controller
 {
     public function store(StoreReviewRequest $request, Car $car, ServiceRecord $serviceRecord)
     {
-        // Check if review already exists
         if ($serviceRecord->review) {
             return response()->json([
                 'message' => 'You have already reviewed this service record',
@@ -21,35 +21,38 @@ class ReviewController extends Controller
         }
 
         $review = Review::create([
-            'owner_id'          => auth()->id(),
-            'mechanic_id'       => $serviceRecord->mechanic_id,
+            'owner_id' => auth()->id(),
+            'mechanic_id' => $serviceRecord->mechanic_id,
             'service_record_id' => $serviceRecord->id,
-            'rating'            => $request->rating,
-            'comment'           => $request->comment,
+            'rating' => $request->rating,
+            'comment' => $request->comment,
         ]);
 
         $review->load('mechanic', 'owner');
 
-        // Notify the mechanic
         $review->mechanic->notify(new NewReviewReceived($review));
 
         return response()->json([
             'message' => 'Review submitted successfully',
-            'review'  => $review,
+            'review' => new ReviewResource($review),
         ], 201);
     }
 
     public function index(Car $car, ServiceRecord $serviceRecord)
     {
+        abort_unless($serviceRecord->car_id === $car->id, 404);
+        abort_unless($car->user_id === auth()->id()
+            || $serviceRecord->mechanic_id === auth()->id(), 403);
+
         $review = $serviceRecord->review()->with('owner', 'mechanic')->first();
 
-        if (!$review) {
+        if (! $review) {
             return response()->json([
                 'message' => 'No review found for this service record',
             ], 404);
         }
 
-        return response()->json($review);
+        return new ReviewResource($review);
     }
 
     public function mechanicReviews()
@@ -67,7 +70,7 @@ class ReviewController extends Controller
 
         return response()->json([
             'average_rating' => $mechanic->average_rating,
-            'reviews'        => $reviews,
+            'reviews' => ReviewResource::collection($reviews),
         ]);
     }
 }

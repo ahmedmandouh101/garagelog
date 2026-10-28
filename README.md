@@ -20,7 +20,7 @@ In Egypt, when you go to a garage:
 
 ## Tech Stack
 
-- **Laravel 11** — PHP Framework
+- **Laravel 12** — PHP Framework
 - **MySQL** — Database
 - **Laravel Sanctum** — API Authentication
 - **PHPUnit** — Testing
@@ -34,11 +34,11 @@ In Egypt, when you go to a garage:
 - Multi-car management per owner
 - Full service history per car
 - Parts tracking per service
-- Next service reminders (date + mileage)
+- Scheduled email reminders for upcoming service dates (mileage thresholds are stored; mileage alerts are planned)
 - Review and rating system for mechanics
 - Database notifications
 - Filters and search on all endpoints
-- 16 automated tests
+- Automated feature and security regression tests
 
 ---
 
@@ -146,3 +146,9 @@ garages
 ---
 
 Built by Ahmed Mandouh
+
+## Delivery status and operations
+
+This is an API foundation, not yet a complete workshop-facing product.
+See [the delivery roadmap](docs/ROADMAP.md) for completed work and pilot priorities,
+and [operations](docs/OPERATIONS.md) for migrations, verification and scheduler setup.

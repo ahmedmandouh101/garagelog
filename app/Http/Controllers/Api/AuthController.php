@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,50 +15,52 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role'     => 'required|in:owner,mechanic',
-            'phone'    => 'nullable|string|max:20',
+            'role' => 'required|in:owner,mechanic',
+            'phone' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role'     => $validated['role'],
-            'phone'    => $validated['phone'] ?? null,
+            'role' => $validated['role'],
+            'phone' => $validated['phone'] ?? null,
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $request->setUserResolver(fn () => $user);
+
         return response()->json([
             'message' => 'Registration successful',
-            'token'   => $token,
-            'user'    => $user,
+            'token' => $token,
+            'user' => new UserResource($user),
         ], 201);
     }
 
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($validated)) {
+        if (! Auth::attempt($validated)) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
-        $user  = Auth::user();
+        $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
-            'token'   => $token,
-            'user'    => $user,
+            'token' => $token,
+            'user' => new UserResource($user),
         ]);
     }
 
