@@ -9,7 +9,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -29,6 +29,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'is_garage_manager' => 'boolean',
             'password' => 'hashed',
         ];
     }
@@ -45,6 +46,11 @@ class User extends Authenticatable
         return $this->belongsTo(Garage::class);
     }
 
+    public function managesGarage(): bool
+    {
+        return $this->role === 'mechanic' && $this->garage_id !== null && $this->is_garage_manager;
+    }
+
     // A mechanic has many service records
     public function serviceRecords()
     {
@@ -57,7 +63,7 @@ class User extends Authenticatable
         return $this->hasMany(Review::class, 'mechanic_id');
     }
 
-// Get mechanic's average rating
+    // Get mechanic's average rating
     public function getAverageRatingAttribute()
     {
         return round($this->reviews()->avg('rating'), 1);

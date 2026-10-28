@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="سجل صيانة عربيتك وإدارة متابعة العملاء في الورشة">
+    <meta name="api-base" content="{{ url('/api') }}">
+    <title>GarageLog | دفتر الصيانة</title>
+    <link rel="stylesheet" href="{{ asset('workshop.css') }}">
+    <script src="{{ asset('workshop.js') }}" defer></script>
+</head>
+<body>
+<header><a class="brand" href="{{ url('/') }}" dir="ltr">Garage<span>Log</span><i></i></a><span class="tagline">كل صيانة ليها حكاية محفوظة</span><button id="logout" class="quiet" hidden>تسجيل الخروج</button></header>
+<main>
+    <div id="notice" role="status" aria-live="polite" hidden></div>
+    <section id="auth" class="auth-layout">
+        <div class="intro"><span class="eyebrow">دفتر عربيتك. وشغل ورشتك.</span><h1>الصيانة تتعمل.<br>وتفضل <em>محفوظة.</em></h1><p>تابع عربياتك، سجّل كل خدمة، وخلّي موعد الصيانة الجاية واضح. من أول زيارة لحد المشوار اللي بعدها.</p><div class="steps"><div><b>01</b> سجل العربية</div><div><b>02</b> اسمح للورشة</div><div><b>03</b> تابع الصيانة</div></div><small>نسخة تجريبية محلية · بياناتك تظهر حسب صلاحيات حسابك</small></div>
+        <div class="card auth-card"><div class="tabs"><button id="login-tab" class="selected">دخول</button><button id="register-tab">حساب جديد</button></div><h2 id="auth-title">أهلًا برجوعك</h2><p class="muted">ادخل حسابك وكمل من آخر صيانة.</p><form id="auth-form"><label id="name-label" hidden>الاسم<input name="name" autocomplete="name" maxlength="255"></label><label>البريد الإلكتروني<input name="email" type="email" autocomplete="username" required></label><label>كلمة المرور<input name="password" type="password" autocomplete="current-password" required minlength="8"></label><label id="role-label" hidden>نوع الحساب<select name="role"><option value="owner">صاحب عربية</option><option value="mechanic">موظف ورشة — يحتاج دعوة</option></select></label><button type="submit" class="primary" id="auth-submit">دخول لحسابك ←</button></form><p class="hint">مدير الورشة يتم تعيينه عن طريق مسؤول النظام. بيانات الدخول محفوظة في ذاكرة الصفحة فقط.</p></div>
+    </section>
+    <section id="workspace" hidden>
+        <div class="page-heading"><div><span class="eyebrow" id="role-name"></span><h1 id="greeting"></h1><p class="muted" id="workspace-description"></p></div><button id="refresh" class="quiet">تحديث البيانات ↻</button></div>
+        <div id="metrics" class="metrics" hidden></div>
+        <div class="workspace-grid">
+            <section class="card" id="vehicles-panel"><div class="section-heading"><h2>العربيات</h2><span class="pill" id="car-count">0</span></div><p class="muted" id="cars-hint"></p><form id="search-form" class="inline"><input name="search" aria-label="ابحث عن عربية" placeholder="ابحث باللوحة أو الماركة"><button class="quiet">بحث</button></form><div id="cars-list" class="cars-list"></div><div class="pager"><button id="previous" class="quiet">السابق</button><span id="page-label"></span><button id="next" class="quiet">التالي</button></div></section>
+            <aside class="actions">
+                <section class="card" data-role="owner"><h2>إضافة عربية</h2><form id="car-form"><div class="pair"><label>الماركة<input name="make" required maxlength="255" placeholder="Toyota"></label><label>الموديل<input name="model" required maxlength="255" placeholder="Corolla"></label></div><div class="pair"><label>سنة الصنع<input name="year" type="number" min="1900" max="{{ date('Y') }}" required></label><label>العداد (كم)<input name="mileage" type="number" min="0" value="0" required></label></div><label>رقم اللوحة<input name="plate_number" required></label><button class="primary">حفظ العربية</button></form></section>
+                <section class="card" data-role="owner"><h2>صلاحية الورشة</h2><p class="muted">السماح يتيح للورشة تسجيل صيانة جديدة. تقدر تسحبه في أي وقت.</p><form id="access-form"><label>العربية<select name="car_id" class="car-select" required></select></label><label>رقم الورشة<input name="garage_id" type="number" min="1" required></label><div class="pair"><button class="primary" name="action" value="grant">السماح</button><button class="quiet" name="action" value="revoke">سحب الإذن</button></div></form></section>
+                <section class="card" data-role="mechanic" id="service-panel"><h2>تسجيل صيانة</h2><form id="service-form"><label>العربية<select name="car_id" class="car-select" required></select></label><label>نوع الخدمة<input name="service_type" required placeholder="تغيير زيت"></label><div class="pair"><label>تاريخ الخدمة<input name="service_date" type="date" required></label><label>العداد (كم)<input name="mileage_at_service" type="number" min="0" required></label></div><label>المصنعية فقط (جنيه)<input name="cost" type="number" min="0" step="0.01" value="0" required></label><label>التفاصيل<textarea name="description" rows="2"></textarea></label><div class="section-heading"><h3>قطع الغيار</h3><button type="button" id="add-part" class="quiet">+ إضافة قطعة</button></div><div id="parts"></div><label>موعد الصيانة القادمة<input name="next_service_date" type="date"></label><button class="primary">حفظ الصيانة</button></form></section>
+                <section class="card" data-role="mechanic"><h2>الانضمام لورشة</h2><p class="muted" id="membership"></p><form id="accept-form"><label>رمز الدعوة<input name="token" required autocomplete="off"></label><button class="primary">قبول الدعوة</button></form></section>
+                <section class="card" id="manager-panel" hidden><h2>فريق الورشة</h2><div id="staff-list"></div><form id="invite-form"><label>بريد الموظف<input name="email" type="email" required></label><button class="primary">إنشاء دعوة</button></form><p id="invitation-result" class="invitation" hidden></p></section>
+                <section class="card" data-role="admin"><h2>تعيين مدير ورشة</h2><form id="manager-form"><label>رقم الورشة<input name="garage_id" type="number" min="1" required></label><label>رقم حساب الميكانيكي<input name="user_id" type="number" min="1" required></label><button class="primary">تعيين المدير</button></form></section>
+            </aside>
+        </div>
+        <section id="history-panel" class="card" hidden><div class="section-heading"><h2 id="history-title">تاريخ الصيانة</h2><button id="close-history" class="quiet">إغلاق</button></div><div id="history-list"></div></section>
+    </section>
+</main>
+<footer><span dir="ltr">GarageLog</span><span>ذاكرة العربية، من أول مشوار.</span></footer>
+</body>
+</html>

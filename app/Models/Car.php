@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Car extends Model
 {
@@ -23,6 +24,13 @@ class Car extends Model
     public function owner()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function allowsGarage(int $garageId): bool
+    {
+        return DB::table('car_garage_access')
+            ->where('car_id', $this->id)->where('garage_id', $garageId)
+            ->where('owner_id', $this->user_id)->whereNull('revoked_at')->exists();
     }
 
     // A car has many service records

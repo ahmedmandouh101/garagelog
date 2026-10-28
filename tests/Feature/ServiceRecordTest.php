@@ -7,6 +7,7 @@ use App\Models\Garage;
 use App\Models\ServiceRecord;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ServiceRecordTest extends TestCase
@@ -38,6 +39,11 @@ class ServiceRecordTest extends TestCase
     {
         [$mechanic, $mechanicToken, $garage] = $this->mechanic();
         [$owner, $car, $ownerToken] = $this->ownerWithCar();
+
+        DB::table('car_garage_access')->insert([
+            'car_id' => $car->id, 'garage_id' => $garage->id, 'owner_id' => $owner->id,
+            'granted_at' => now(), 'created_at' => now(), 'updated_at' => now(),
+        ]);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$mechanicToken)
             ->postJson("/api/cars/{$car->id}/service-records", [

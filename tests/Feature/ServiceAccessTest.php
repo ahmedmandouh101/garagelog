@@ -6,6 +6,7 @@ use App\Models\ServicePart;
 use App\Models\ServiceRecord;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -18,6 +19,10 @@ function serviceFixture(): array
     $car = Car::factory()->create(['user_id' => $owner->id]);
     $record = ServiceRecord::factory()->create([
         'car_id' => $car->id, 'garage_id' => $garage->id, 'mechanic_id' => $mechanic->id,
+    ]);
+    DB::table('car_garage_access')->insert([
+        'car_id' => $car->id, 'garage_id' => $garage->id, 'owner_id' => $owner->id,
+        'granted_at' => now(), 'created_at' => now(), 'updated_at' => now(),
     ]);
 
     return [$owner, $car, $mechanic, $record];

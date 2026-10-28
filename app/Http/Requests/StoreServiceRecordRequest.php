@@ -10,7 +10,8 @@ class StoreServiceRecordRequest extends FormRequest
     {
         return $this->user()->role === 'mechanic'
             && $this->user()->garage_id !== null
-            && (int) $this->input('garage_id') === (int) $this->user()->garage_id;
+            && (int) $this->input('garage_id') === (int) $this->user()->garage_id
+            && $this->route('car')->allowsGarage($this->user()->garage_id);
     }
 
     public function rules(): array
@@ -25,6 +26,7 @@ class StoreServiceRecordRequest extends FormRequest
             'next_service_date' => 'nullable|date|after:service_date',
             'next_service_mileage' => 'nullable|integer|min:0',
             'parts' => 'sometimes|array',
+            'parts.*' => 'array:part_name,quantity,price',
             'parts.*.part_name' => 'required_with:parts|string|max:255',
             'parts.*.quantity' => 'required_with:parts|integer|min:1',
             'parts.*.price' => 'required_with:parts|numeric|min:0',

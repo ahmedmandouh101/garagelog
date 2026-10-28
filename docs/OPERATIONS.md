@@ -41,3 +41,41 @@ Overdue reminders and mileage reminders are not implemented in this delivery.
 
 No live mail send, external deployment or OS scheduled task was performed as part
 of the foundation update. See ROADMAP.md for remaining production prerequisites.
+
+## Arabic workspace and local demo
+
+```powershell
+php artisan db:seed --class=WorkshopDemoSeeder
+php artisan serve --host=127.0.0.1 --port=8010
+```
+
+Open `http://127.0.0.1:8010`. Demo credentials, restricted to local/testing environments:
+
+- Manager: `manager@garagelog.example.test`
+- Owner: `owner@garagelog.example.test`
+- Password for both: `GarageLogDemo2026!`
+
+The demo seeder adds clearly labeled fictional data. It does not reset the database,
+change existing account passwords, or send emails. Never run a publicly reachable
+instance with these demo accounts. Authentication tokens are held in page memory;
+reloading the page requires signing in again. Logging out revokes the current token.
+
+### Workshop onboarding API
+
+1. Admin: `PUT /api/garages/{garage}/manager` with a mechanic `user_id`.
+2. Manager: `POST /api/workshop/invitations` with the employee email.
+   Share the returned token privately with that employee; automatic delivery is not configured.
+3. Employee: register a mechanic account, then `POST /api/workshop/invitations/accept`
+   with `token`, while authenticated using the invited email.
+4. Owner: add their vehicle and `POST /api/cars/{car}/garage-access/{garage}`.
+5. Workshop staff: `GET /api/workshop/cars`, then record service using the existing API.
+6. Owner: `DELETE /api/cars/{car}/garage-access/{garage}` to revoke future writes.
+
+Manager metrics (`GET /api/workshop/dashboard`) distinguish labor totals from parts:
+`labor_total_this_month` is the service `cost` column only, not total sales or profit.
+Managers use `GET /api/workshop/staff` and `DELETE /api/workshop/staff/{user}`.
+Multiple managers are allowed; the staff-removal endpoint cannot remove managers.
+
+Customer self-registration and owner consent are working. Workshop intake for a
+customer who has not registered is still planned; do not create accounts or grant
+vehicle access on their behalf. See ROADMAP.md for remaining workflow gaps.
