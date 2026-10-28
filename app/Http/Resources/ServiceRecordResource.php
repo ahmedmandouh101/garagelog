@@ -11,6 +11,7 @@ class ServiceRecordResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'vehicle' => $this->whenLoaded('car', fn () => $this->car->only('id', 'make', 'model', 'plate_number')),
             'service_type' => $this->service_type,
             'description' => $this->description,
             'mileage_at_service' => number_format($this->mileage_at_service).' km',

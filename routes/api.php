@@ -5,8 +5,10 @@ use App\Http\Controllers\Api\CarController;
 use App\Http\Controllers\Api\GarageController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\ServiceReceiptController;
 use App\Http\Controllers\Api\ServiceRecordController;
 use App\Http\Controllers\Api\WorkshopController;
+use App\Http\Controllers\Api\WorkshopCustomerController;
 use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/workshop/invitations/accept', [WorkshopController::class, 'accept'])->middleware('throttle:authentication');
     Route::delete('/workshop/staff/{user}', [WorkshopController::class, 'removeStaff']);
     Route::get('/workshop/cars', [WorkshopController::class, 'cars']);
+    Route::get('/workshop/services', [WorkshopController::class, 'services']);
+    Route::get('/workshop/customers', [WorkshopCustomerController::class, 'index']);
+    Route::post('/workshop/customers', [WorkshopCustomerController::class, 'store']);
+    Route::post('/workshop/customers/{customer}/claim-token', [WorkshopCustomerController::class, 'renewToken'])->middleware('throttle:authentication');
+    Route::post('/customer-links/claim', [WorkshopCustomerController::class, 'claim'])->middleware('throttle:authentication');
+    Route::post('/customer-links/preview', [WorkshopCustomerController::class, 'preview'])->middleware('throttle:authentication');
+    Route::get('/service-records/{serviceRecord}/receipt', [ServiceReceiptController::class, 'show']);
+    Route::get('/cars/{car}/garage-access', [WorkshopController::class, 'access']);
     Route::post('/cars/{car}/garage-access/{garage}', [WorkshopController::class, 'grant']);
     Route::delete('/cars/{car}/garage-access/{garage}', [WorkshopController::class, 'revoke']);
 

@@ -34,13 +34,26 @@ before investing in native mobile applications or a marketplace.
 - Public workshop profiles no longer expose staff email or phone.
 - Local-only demo seeder and end-to-end browser verification of manager service entry.
 
-## Next delivery: complete customer intake and receipts
+## Customer intake and receipts completed — 2026-10-28
 
-1. Workshop-created customer intake by phone, followed by verified account claiming.
-2. Workshop directory picker and a visible list of active/revoked vehicle grants.
-3. Printable individual service receipts and workshop service history.
-4. Password recovery and verified identity/contact methods.
-5. Consent-based messaging integration and delivery status.
+- Private workshop customer intake with phone, vehicle details and notes, isolated by workshop.
+- No user account, canonical vehicle, or service permission is created during intake.
+- Seven-day hashed linking codes with rotation, expiry and one-time acceptance.
+- Owner previews the workshop name and matching plate before explicitly granting access.
+- Owners link only vehicles already in their accounts; plate matching does not verify legal ownership or phone identity.
+- Workshop directory search replaces manual workshop IDs in owner permissions.
+- Owners can list active/revoked grants and revoke each workshop directly.
+- Paginated workshop service history and authenticated individual service receipts.
+- Receipts contain labor, parts, quantities, totals and next service details, with a print/PDF action.
+- Receipts are service summaries, not proof of payment or tax invoices.
+
+## Next delivery: identity, service quality and pilot readiness
+
+1. Password recovery and verified contact methods; establish vehicle ownership verification policy.
+2. Customer intake corrections, duplicate handling, consent audit and retention rules.
+3. Normalized service types, mileage validation and mileage reminders.
+4. Consent-based messaging integration and delivery status.
+5. Pilot onboarding, support metrics and subscription experiments.
 
 Acceptance: workshop staff can register a customer and vehicle, record a service,
 deliver the receipt and arrange the next service without developer assistance.

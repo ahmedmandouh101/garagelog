@@ -76,6 +76,38 @@ Manager metrics (`GET /api/workshop/dashboard`) distinguish labor totals from pa
 Managers use `GET /api/workshop/staff` and `DELETE /api/workshop/staff/{user}`.
 Multiple managers are allowed; the staff-removal endpoint cannot remove managers.
 
-Customer self-registration and owner consent are working. Workshop intake for a
-customer who has not registered is still planned; do not create accounts or grant
-vehicle access on their behalf. See ROADMAP.md for remaining workflow gaps.
+### Customer intake and vehicle linking
+
+1. Staff: `POST /api/workshop/customers` with name, phone, plate_number, make, model,
+   year, and optional notes. The response contains the linking code once.
+2. Staff privately gives the code to the customer. It expires in seven days;
+   automatic SMS/email delivery is not configured.
+3. Customer registers as an owner, adds their own vehicle with the matching plate,
+   and previews `POST /api/customer-links/preview` with token and car_id.
+4. Customer confirms `POST /api/customer-links/claim` with the same fields. Only
+   this action links the intake and grants workshop service permission.
+5. Staff can rotate an unclaimed code using
+   `POST /api/workshop/customers/{id}/claim-token`; previous codes stop working.
+
+`GET /api/workshop/customers?search=...` returns only the current workshop's intake
+records and never exposes token hashes. This endpoint uses paginator fields
+`data`, `total`, `current_page`, and `last_page` (not Resource `meta`).
+No user or vehicle is silently created by intake and no identity is inferred from
+phone numbers. Codes authorize a linking request, not proof of legal vehicle
+ownership or verified control of the phone number. Intake names/phones/notes
+remain private workshop records and are not copied into the owner's profile.
+
+### Permissions, history and receipts
+
+- Owners list active/revoked permissions with `GET /api/cars/{car}/garage-access`.
+- Workshop staff list their workshop services with `GET /api/workshop/services`.
+- `GET /api/service-records/{id}/receipt` returns escaped HTML in a JSON `html`
+  field. It requires authentication as the current vehicle owner or current staff
+  in the recorded workshop. Unrelated workshops and owners receive 403.
+- The workspace renders receipt HTML in a sandboxed iframe with scripts disabled;
+  the parent page's print action opens the browser print dialog for that receipt.
+- Receipts are generated from current service/vehicle/workshop data. They are not
+  immutable historical invoice snapshots and do not record payment or tax status.
+
+No public share link is issued for customer history or receipts. See ROADMAP.md
+for remaining workflow gaps and production requirements.

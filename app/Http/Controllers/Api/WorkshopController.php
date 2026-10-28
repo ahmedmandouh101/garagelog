@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CarResource;
+use App\Http\Resources\ServiceRecordResource;
 use App\Models\Car;
 use App\Models\Garage;
 use App\Models\ServiceRecord;
@@ -109,6 +110,23 @@ class WorkshopController extends Controller
                 ->whereColumn('owner_id', 'cars.user_id')->where('garage_id', $request->user()->garage_id)
                 ->whereNull('revoked_at');
         })->filter($request->only('search', 'make', 'year'))->paginate(10));
+    }
+
+    public function access(Request $request, Car $car)
+    {
+        abort_unless($car->user_id === $request->user()->id, 403);
+
+        return response()->json(['data' => DB::table('car_garage_access')->join('garages', 'garages.id', '=', 'car_garage_access.garage_id')
+            ->where('car_id', $car->id)->where('owner_id', $request->user()->id)
+            ->get(['garages.id', 'garages.name', 'garages.city', 'granted_at', 'revoked_at'])]);
+    }
+
+    public function services(Request $request)
+    {
+        $this->requireStaff($request);
+
+        return ServiceRecordResource::collection(ServiceRecord::where('garage_id', $request->user()->garage_id)
+            ->with('parts', 'garage', 'mechanic', 'car')->orderByDesc('service_date')->orderByDesc('id')->paginate(10));
     }
 
     public function dashboard(Request $request)
