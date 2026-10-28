@@ -26,7 +26,7 @@ class GarageController extends Controller
 
         return response()->json([
             'message' => 'Garage created successfully',
-            'garage'  => new GarageResource($garage),
+            'garage' => new GarageResource($garage),
         ], 201);
     }
 
@@ -43,7 +43,7 @@ class GarageController extends Controller
 
         return response()->json([
             'message' => 'Garage updated successfully',
-            'garage'  => new GarageResource($garage),
+            'garage' => new GarageResource($garage),
         ]);
     }
 
@@ -51,6 +51,10 @@ class GarageController extends Controller
     {
         if (auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if ($garage->serviceRecords()->exists()) {
+            return response()->json(['message' => 'Garages with service history cannot be deleted'], 409);
         }
 
         $garage->delete();

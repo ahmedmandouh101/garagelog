@@ -9,8 +9,8 @@ use App\Http\Controllers\Api\ServiceRecordController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:authentication');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:authentication');
 
 Route::get('/garages', [GarageController::class, 'index']);
 Route::get('/garages/{garage}', [GarageController::class, 'show']);
@@ -31,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Service Records — nested under cars
     Route::apiResource('cars.service-records', ServiceRecordController::class)
+        ->parameters(['service-records' => 'serviceRecord'])
+        ->scoped()
         ->except(['create', 'edit']);
 
     // Reviews — nested under cars and service records

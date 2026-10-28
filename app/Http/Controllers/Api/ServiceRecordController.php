@@ -10,6 +10,7 @@ use App\Models\Car;
 use App\Models\ServiceRecord;
 use App\Notifications\ServiceRecordCreated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ServiceRecordController extends Controller
 {
@@ -30,23 +31,27 @@ class ServiceRecordController extends Controller
 
     public function store(StoreServiceRecordRequest $request, Car $car)
     {
-        $record = $car->serviceRecords()->create([
-            'garage_id'            => $request->garage_id,
-            'mechanic_id'          => auth()->id(),
-            'service_type'         => $request->service_type,
-            'description'          => $request->description,
-            'mileage_at_service'   => $request->mileage_at_service,
-            'cost'                 => $request->cost ?? 0,
-            'service_date'         => $request->service_date,
-            'next_service_date'    => $request->next_service_date,
-            'next_service_mileage' => $request->next_service_mileage,
-        ]);
+        $record = DB::transaction(function () use ($request, $car) {
+            $record = $car->serviceRecords()->create([
+                'garage_id' => $request->garage_id,
+                'mechanic_id' => auth()->id(),
+                'service_type' => $request->service_type,
+                'description' => $request->description,
+                'mileage_at_service' => $request->mileage_at_service,
+                'cost' => $request->cost ?? 0,
+                'service_date' => $request->service_date,
+                'next_service_date' => $request->next_service_date,
+                'next_service_mileage' => $request->next_service_mileage,
+            ]);
 
-        if ($request->has('parts')) {
-            foreach ($request->parts as $part) {
-                $record->parts()->create($part);
+            if ($request->has('parts')) {
+                foreach ($request->parts as $part) {
+                    $record->parts()->create($part);
+                }
             }
-        }
+
+            return $record;
+        });
 
         $record->load('parts', 'mechanic', 'garage');
 
@@ -54,13 +59,14 @@ class ServiceRecordController extends Controller
 
         return response()->json([
             'message' => 'Service record created successfully',
-            'record'  => new ServiceRecordResource($record),
+            'record' => new ServiceRecordResource($record),
         ], 201);
     }
 
     public function show(Car $car, ServiceRecord $serviceRecord)
     {
-        if ($car->user_id !== auth()->id() && auth()->user()->role !== 'mechanic') {
+        abort_unless($serviceRecord->car_id === $car->id, 404);
+        if ($car->user_id !== auth()->id() && $serviceRecord->mechanic_id !== auth()->id()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -71,20 +77,23 @@ class ServiceRecordController extends Controller
 
     public function update(UpdateServiceRecordRequest $request, Car $car, ServiceRecord $serviceRecord)
     {
-        $serviceRecord->update($request->validated());
+        DB::transaction(function () use ($request, $serviceRecord) {
+            $serviceRecord->update($request->safe()->except('parts'));
 
-        if ($request->has('parts')) {
-            $serviceRecord->parts()->delete();
-            foreach ($request->parts as $part) {
-                $serviceRecord->parts()->create($part);
+            if ($request->has('parts')) {
+                $serviceRecord->parts()->delete();
+                foreach ($request->parts as $part) {
+                    $serviceRecord->parts()->create($part);
+                }
             }
-        }
+
+        });
 
         $serviceRecord->load('parts', 'mechanic', 'garage');
 
         return response()->json([
             'message' => 'Service record updated successfully',
-            'record'  => new ServiceRecordResource($serviceRecord),
+            'record' => new ServiceRecordResource($serviceRecord),
         ]);
     }
 

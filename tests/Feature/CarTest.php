@@ -15,6 +15,7 @@ class CarTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner']);
         $token = $owner->createToken('auth_token')->plainTextToken;
+
         return [$owner, $token];
     }
 
@@ -22,33 +23,33 @@ class CarTest extends TestCase
     {
         [$owner, $token] = $this->ownerWithToken();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/cars', [
-                'make'         => 'Toyota',
-                'model'        => 'Corolla',
-                'year'         => 2020,
+                'make' => 'Toyota',
+                'model' => 'Corolla',
+                'year' => 2020,
                 'plate_number' => 'ABC-1234',
-                'color'        => 'White',
-                'mileage'      => 45000,
+                'color' => 'White',
+                'mileage' => 45000,
             ]);
 
         $response->assertStatus(201)
-                 ->assertJsonStructure([
-                     'message',
-                     'car' => ['id', 'make', 'model', 'year', 'plate_number'],
-                 ]);
+            ->assertJsonStructure([
+                'message',
+                'car' => ['id', 'make', 'model', 'year', 'plate_number'],
+            ]);
     }
 
     public function test_mechanic_cannot_create_car(): void
     {
         $mechanic = User::factory()->create(['role' => 'mechanic']);
-        $token    = $mechanic->createToken('auth_token')->plainTextToken;
+        $token = $mechanic->createToken('auth_token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/cars', [
-                'make'         => 'Toyota',
-                'model'        => 'Corolla',
-                'year'         => 2020,
+                'make' => 'Toyota',
+                'model' => 'Corolla',
+                'year' => 2020,
                 'plate_number' => 'ABC-1234',
             ]);
 
@@ -61,33 +62,33 @@ class CarTest extends TestCase
 
         Car::factory()->count(3)->create(['user_id' => $owner->id]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/cars');
 
         $response->assertStatus(200);
-        $this->assertEquals(3, $response->json('total'));
+        $this->assertEquals(3, $response->json('meta.total'));
     }
 
     public function test_owner_cannot_see_other_owners_cars(): void
     {
         [$owner, $token] = $this->ownerWithToken();
-        $otherOwner      = User::factory()->create(['role' => 'owner']);
+        $otherOwner = User::factory()->create(['role' => 'owner']);
 
         Car::factory()->count(2)->create(['user_id' => $otherOwner->id]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/cars');
 
         $response->assertStatus(200);
-        $this->assertEquals(0, $response->json('total'));
+        $this->assertEquals(0, $response->json('meta.total'));
     }
 
     public function test_owner_can_delete_his_car(): void
     {
         [$owner, $token] = $this->ownerWithToken();
-        $car             = Car::factory()->create(['user_id' => $owner->id]);
+        $car = Car::factory()->create(['user_id' => $owner->id]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->deleteJson("/api/cars/{$car->id}");
 
         $response->assertStatus(200);
@@ -97,10 +98,10 @@ class CarTest extends TestCase
     public function test_owner_cannot_delete_other_owners_car(): void
     {
         [$owner, $token] = $this->ownerWithToken();
-        $otherOwner      = User::factory()->create(['role' => 'owner']);
-        $car             = Car::factory()->create(['user_id' => $otherOwner->id]);
+        $otherOwner = User::factory()->create(['role' => 'owner']);
+        $car = Car::factory()->create(['user_id' => $otherOwner->id]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->deleteJson("/api/cars/{$car->id}");
 
         $response->assertStatus(403);

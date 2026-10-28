@@ -30,7 +30,7 @@ class CarController extends Controller
 
         return response()->json([
             'message' => 'Car registered successfully',
-            'car'     => new CarResource($car),
+            'car' => new CarResource($car),
         ], 201);
     }
 
@@ -51,7 +51,7 @@ class CarController extends Controller
 
         return response()->json([
             'message' => 'Car updated successfully',
-            'car'     => new CarResource($car),
+            'car' => new CarResource($car),
         ]);
     }
 
@@ -59,6 +59,10 @@ class CarController extends Controller
     {
         if ($car->user_id !== auth()->id()) {
             return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if ($car->serviceRecords()->exists()) {
+            return response()->json(['message' => 'Cars with service history cannot be deleted'], 409);
         }
 
         $car->delete();
