@@ -9,7 +9,7 @@ class ResetAccountPassword extends ResetPassword
 {
     protected function resetUrl($notifiable)
     {
-        return rtrim(config('app.url'), '/').'/#'.http_build_query([
+        return rtrim(config('app.url'), '/').'/app#'.http_build_query([
             'reset_token' => $this->token, 'email' => $notifiable->getEmailForPasswordReset(),
         ], '', '&', PHP_QUERY_RFC3986);
     }

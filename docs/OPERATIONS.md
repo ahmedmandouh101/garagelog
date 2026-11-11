@@ -162,3 +162,10 @@ replacement require a future audited correction workflow; no bypass was added.
 Monetary inputs allow at most two decimal places and values fitting existing decimal
 columns. Null labor costs and out-of-range integer readings are rejected. Existing
 history is not rewritten or normalized automatically.
+
+## Product entry points — 2026-11-11
+
+`/` is now the public product explanation, `/demo` is an isolated fictional interactive example,
+and `/app` is the real authenticated workspace. Existing root-fragment reset links forward to
+`/app`, and new password reset notifications link there directly. No demo account credentials
+or live customer data are exposed by the public demo. Marketing images are in public/marketing.

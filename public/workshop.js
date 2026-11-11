@@ -52,6 +52,7 @@
         $('verification-panel').hidden = true;
         ['cars-list', 'staff-list', 'history-list', 'customers-list', 'workshop-history-list', 'grants-list'].forEach(id => $(id).replaceChildren());
         document.querySelectorAll('#workspace form').forEach(form => form.reset());
+        $('parts').replaceChildren(); updateServiceTotal();
     }
     function mode(value) {
         state.mode = value;
@@ -94,6 +95,8 @@
         $('service-panel').hidden = user.role !== 'mechanic' || !user.garage_id;
         $('vehicles-panel').hidden = user.role === 'admin';
         const activeStaff = user.role === 'mechanic' && !!user.garage_id;
+        $('work-nav').hidden = user.role === 'admin';
+        document.querySelectorAll('[data-needs-garage]').forEach(link => { link.hidden = !activeStaff; });
         $('intake-panel').hidden = !activeStaff; $('customers-panel').hidden = !activeStaff; $('workshop-history-panel').hidden = !activeStaff;
         $('metrics').hidden = !user.is_garage_manager;
         $('cars-hint').textContent = user.role === 'owner' ? 'اختار عربية لعرض سجلها أو اسمح لورشة بتسجيل صيانة.' : 'العربيات بتظهر بعد موافقة أصحابها. مش بنعرض تاريخها عند ورش تانية.';
@@ -143,7 +146,16 @@
             if (state.user.role === 'owner') {
                 const button = node('button', 'عرض تاريخ الصيانة ←', 'quiet');
                 button.onclick = () => history(car).catch(error => notice(error.message, true)); row.append(button);
-            } else row.append(node('p', 'رقم العربية: ' + car.id));
+            } else {
+                const button = node('button', 'تسجيل صيانة للعربية دي', 'quiet');
+                button.onclick = () => {
+                    $('service-form').elements.car_id.value = String(car.id);
+                    $('service-form').elements.mileage_at_service.value = car.mileage_raw;
+                    $('service-panel').scrollIntoView({behavior:'smooth'});
+                    $('service-form').elements.service_type.focus({preventScroll:true});
+                };
+                row.append(button);
+            }
             $('cars-list').append(row);
         });
     }
@@ -192,7 +204,7 @@
             if (type === 'number') { input.min = key === 'quantity' ? '1' : '0'; input.step = key === 'quantity' ? '1' : '0.01'; }
             label.append(input); row.append(label);
         });
-        const remove = node('button', 'حذف القطعة', 'quiet'); remove.type = 'button'; remove.onclick = () => row.remove(); row.append(remove); $('parts').append(row);
+        const remove = node('button', 'حذف القطعة', 'quiet'); remove.type = 'button'; remove.onclick = () => { row.remove(); updateServiceTotal(); }; row.append(remove); $('parts').append(row);
     };
     bindForm('service-form', async (data, event) => {
         const carId = data.car_id; delete data.car_id; data.garage_id = state.user.garage_id;
@@ -200,6 +212,7 @@
         data.parts = [...$('parts').children].map(row => Object.fromEntries([...row.querySelectorAll('input')].map(input => [input.dataset.key, input.value])));
         const result = await api(`/cars/${carId}/service-records`, 'POST', data);
         event.target.reset(); $('parts').replaceChildren(); await refresh(); notice('الصيانة وقطع الغيار اتحفظوا، وصاحب العربية يقدر يشوفهم في سجله.');
+        updateServiceTotal();
         await showReceipt(result.record.id);
     });
     async function loadGarages(search = '') {
@@ -344,5 +357,17 @@
         $('reset-form').elements.email.value = fragment.get('email') || '';
         window.history.replaceState(null, '', location.pathname + location.search);
         mode('reset');
+    } else if (location.hash === '#register') {
+        mode('register');
     }
+    function updateServiceTotal() {
+        let total = Math.round((Number($('service-form').elements.cost.value) || 0) * 100);
+        $('parts').querySelectorAll('.part-row').forEach(row => {
+            const quantity = Number(row.querySelector('[data-key="quantity"]').value) || 0;
+            const price = Number(row.querySelector('[data-key="price"]').value) || 0;
+            total += Math.round(price * 100) * quantity;
+        });
+        $('service-total').textContent = Number.isFinite(total) && total >= 0 ? number(total / 100) + ' جنيه' : 'راجع القيم المدخلة';
+    }
+    $('service-form').addEventListener('input', updateServiceTotal);
 })();

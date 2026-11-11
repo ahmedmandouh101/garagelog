@@ -8,7 +8,12 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 it('serves the Arabic workspace without a frontend build', function () {
-    $this->get('/')->assertOk()->assertSee('dir="rtl"', false)->assertSee('GarageLog');
+    $this->get('/app')->assertOk()->assertSee('dir="rtl"', false)->assertSee('GarageLog');
+});
+
+it('shows the product and an isolated illustrative demo without authentication', function () {
+    $this->get('/')->assertOk()->assertSee('العميل يرجع.')->assertSee('/demo', false);
+    $this->get('/demo')->assertOk()->assertSee('بيانات توضيحية لا تُحفظ')->assertDontSee('owner@garagelog.example.test');
 });
 
 it('returns private workshop membership only to the signed in user', function () {
