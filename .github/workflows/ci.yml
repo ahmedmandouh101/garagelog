@@ -1,0 +1,45 @@
+name: Verify release
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ci-only
+          MYSQL_DATABASE: garagelog_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -pci-only"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, pdo_sqlite, dom, fileinfo
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: composer audit --locked --no-dev
+      - run: php vendor/bin/pint --test app/Http/Middleware app/Console/Commands/CreateAdmin.php app/Console/Commands/ProductionCheck.php app/Services/ServiceAudit.php tests/Feature/ProductionSafetyTest.php
+      - run: php vendor/bin/pest --compact
+      - name: MySQL integration suite
+        run: php vendor/bin/pest --compact
+        env:
+          DB_CONNECTION: mysql
+          DB_DATABASE: garagelog_test
+          DB_USERNAME: root
+          DB_PASSWORD: ci-only
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm audit
+      - run: node --check public/workshop.js && npm run build

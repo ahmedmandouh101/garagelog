@@ -9,6 +9,7 @@ use App\Http\Resources\ServiceRecordResource;
 use App\Models\Car;
 use App\Models\ServiceRecord;
 use App\Notifications\ServiceRecordCreated;
+use App\Services\ServiceAudit;
 use App\Services\ServiceRecordIntegrity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -54,6 +55,7 @@ class ServiceRecordController extends Controller
             }
 
             $car->update(['mileage' => max($car->mileage, $record->mileage_at_service)]);
+            ServiceAudit::write($record, 'created');
 
             return $record;
         });
@@ -85,6 +87,7 @@ class ServiceRecordController extends Controller
         DB::transaction(function () use ($request, $serviceRecord, $car) {
             $car = Car::whereKey($car->id)->lockForUpdate()->firstOrFail();
             $serviceRecord->refresh();
+            $before = ServiceAudit::snapshot($serviceRecord);
             app(ServiceRecordIntegrity::class)->validate($car, $request->validated(), $serviceRecord);
             $serviceRecord->update($request->safe()->except('parts'));
 
@@ -96,6 +99,7 @@ class ServiceRecordController extends Controller
             }
 
             $car->update(['mileage' => max($car->mileage, $serviceRecord->mileage_at_service)]);
+            ServiceAudit::write($serviceRecord, 'updated', $before);
         });
 
         $serviceRecord->load('parts', 'mechanic', 'garage');
@@ -112,11 +116,8 @@ class ServiceRecordController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $serviceRecord->parts()->delete();
-        $serviceRecord->delete();
-
         return response()->json([
-            'message' => 'Service record deleted successfully',
-        ]);
+            'message' => 'Service history cannot be permanently deleted. Correct the record instead.',
+        ], 409);
     }
 }

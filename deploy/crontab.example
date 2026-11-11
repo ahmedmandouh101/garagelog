@@ -1,0 +1,2 @@
+# Install under the application user. Adjust paths; monitor failures.
+* * * * * cd /var/www/garagelog/current && /usr/bin/php artisan schedule:run >> /var/log/garagelog-scheduler.log 2>&1

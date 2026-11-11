@@ -114,7 +114,7 @@ php artisan db:seed
 php artisan serve
 ```
 
-Default admin credentials:
+Local/testing-only demo admin credentials (seeding is blocked in production; use `php artisan app:create-admin`):
 ```
 Email: admin@garagelog.com
 Password: password123
@@ -150,6 +150,9 @@ Built by Ahmed Mandouh
 
 ## Delivery status and operations
 
-This is an API foundation, not yet a complete workshop-facing product.
+This is a Laravel API and Arabic web workspace, prepared as a production release candidate with host acceptance checks outstanding.
+The Arabic workshop workspace now supports intake, consent, service records and receipts.
+For the production release candidate, start with [deployment and acceptance](docs/PRODUCTION.md).
+Marketing copy, pricing experiments and the first-customer plan are in [the Arabic sales kit](docs/SALES-KIT.ar.md).
 See [the delivery roadmap](docs/ROADMAP.md) for completed work and pilot priorities,
 and [operations](docs/OPERATIONS.md) for migrations, verification and scheduler setup.

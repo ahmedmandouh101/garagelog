@@ -146,8 +146,8 @@ Treat mail logs as sensitive and do not expose them publicly.
 
 Reset links carry the token in the URL fragment, which the app removes on load;
 the form submits it directly to the API. Neither reset nor confirmation automatically
-signs a user in. Newly issued API tokens last 24 hours. Previously issued tokens
-retain their original expiry until logout/reset; this update does not bulk-revoke them.
+signs a user in. All API tokens now have a maximum age of 24 hours, including
+previously issued tokens, in addition to any earlier explicit expiration.
 
 ## Service data rules
 

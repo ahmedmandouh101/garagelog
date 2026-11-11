@@ -77,10 +77,10 @@ deliver the receipt and arrange the next service without developer assistance.
 
 - Self-registered mechanics have no workshop access until an invitation is accepted or an admin assigns them.
 - Owner consent is required for service creation and updates. Mechanics can still read their own historical service records after consent revocation; this does not expose other workshops' history.
-- Establish archive/audit and ownership-transfer policies; admin service deletion remains destructive.
+- Service edits are now audited and permanent service deletion is blocked. Ownership-transfer and retention policies still require an operational process.
 - Configure real mail delivery, HTTPS, backups, monitoring and scheduler infrastructure.
 - Separate public staff profile fields from private email/phone fields.
-- Configure and test actual email delivery; align APP_URL with the real application origin. Add phone verification and lifecycle controls for legacy tokens.
+- Configure and test actual email delivery; align APP_URL with the real application origin. All API tokens now have a global 24-hour maximum age. Phone verification remains separate.
 - Add mileage reminders and normalize service types before relying on supersession rules.
 - Define billing, tenant limits, support and onboarding after pilot interviews.
 - Replace demo administrator credentials before any public deployment.

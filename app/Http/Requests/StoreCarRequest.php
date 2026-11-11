@@ -17,7 +17,7 @@ class StoreCarRequest extends FormRequest
             'make' => 'required|string|max:255',
             'model' => 'required|string|max:255',
             'year' => 'required|integer|min:1900|max:'.date('Y'),
-            'plate_number' => 'required|string|unique:cars,plate_number',
+            'plate_number' => 'required|string|max:100|unique:cars,plate_number',
             'color' => 'nullable|string|max:100',
             'mileage' => 'sometimes|integer|min:0|max:4294967295',
         ];
