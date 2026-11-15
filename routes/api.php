@@ -45,6 +45,7 @@ Route::middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/cars/{car}/garage-access/{garage}', [WorkshopController::class, 'grant']);
     Route::delete('/cars/{car}/garage-access/{garage}', [WorkshopController::class, 'revoke']);
 
+    
     // Auth
     Route::get('/me', fn (Request $request) => new UserResource($request->user()))->withoutMiddleware('verified');
     Route::post('/logout', [AuthController::class, 'logout'])->withoutMiddleware('verified');
