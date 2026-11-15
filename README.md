@@ -128,6 +128,15 @@ Password: password123
 php artisan test
 ```
 
+To automatically test before each push from your development checkout:
+
+```bash
+php tools/install-hooks.php
+```
+
+See [automatic local checks](docs/AUTOMATIC-CHECKS.md) for prerequisites and scope.
+This works independently of GitHub Actions; it does not clear an account billing lock.
+
 ---
 
 ## Database Design
